@@ -1,72 +1,119 @@
 package domain.participant;
 
+import domain.Answer;
 import domain.Result;
+import domain.card.CardDeck;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
 
 public class Players {
 
     private static final int MIN_SIZE = 2;
     private static final int MAX_SIZE = 8;
 
-    private final List<Player> names;
+    private final CardDeck cardDeck;
+    private final List<Hands> hands;
 
-    public Players(final List<Player> names) {
-        this.names = names;
+    public Players(CardDeck cardDeck, List<Hands> hands) {
+        this.cardDeck = cardDeck;
+        this.hands = hands;
     }
 
-    public static Players from(final List<String> names) {
-        validate(names);
-        return new Players(mapToPlayers(names));
+    public static Players from(CardDeck cardDeck, DealerHands dealerHands, List<String> strings) {
+        List<Hands> result = new ArrayList<>();
+
+        result.add(dealerHands);
+        result.addAll(mapToHands(strings));
+
+        return new Players(cardDeck, result);
     }
 
-    public void forEach(Consumer<? super Player> action) {
-        names.forEach(action);
+
+    public void initHands() {
+        for (int i = 0; i < 2; i++) {
+            for (Hands hand : hands) {
+                hand.add(cardDeck.pop());
+            }
+        }
+    }
+
+    public DealerHands getDealerHands() {
+        return (DealerHands) hands.get(0);
+    }
+
+    public List<Hands> getPlayerHands() {
+        return hands.subList(1, hands.size()); //todo
+    }
+
+    public void deal(final Hands hand, final Answer answer) {
+        if (answer.isHit()) {
+            hand.add(cardDeck.pop());
+        }
+    }
+
+    public void deal() {
+        Hands dealer = hands.get(0);
+        while (dealer.sum() <= 16) {
+            dealer.add(cardDeck.pop());
+        }
     }
 
     public boolean isAllBust() {
-        return names.stream()
-                .allMatch(Player::isBust);
+        return hands.stream()
+                .filter(hand -> !hand.isDealer())
+                .allMatch(Hands::isBust);
     }
 
-    public Map<Player, Result> calculateResultBy(final Dealer dealer) {
-        final Map<Player, Result> result = new LinkedHashMap<>();
+    public Map<Hands, Result> calculateResultByDealer() {
+        Hands dealer = hands.get(0);
+        final Map<Hands, Result> result = new LinkedHashMap<>();
 
-        for (Player name : names) {
-            result.put(name, name.calculateResultBy(dealer));
+        for (Hands hand : hands.subList(1, hands.size())) {
+            result.put(hand, hand.calculateResultBy(dealer));
         }
 
         return result;
     }
 
-    public List<Player> getPlayers() {
-        return names;
+    public List<Hands> getAll() {
+        return hands;
     }
 
-    private static List<Player> mapToPlayers(final List<String> names) {
+    public Map<Result, Integer> calculateResultByPlayers() {
+        final Map<Result, Integer> result = new EnumMap<>(Result.class);
+
+        for (Result value : calculateResultByDealer().values()) {
+            Result reversed = value.reverse();
+            result.put(reversed, result.getOrDefault(reversed, 0) + 1);
+        }
+
+        return result;
+    }
+
+    private static List<Hands> mapToHands(final List<String> names) {
         return names.stream()
                 .map(String::trim)
-                .map(name -> new Player(new Name(name), Hands.createEmptyHands()))
+                .map(Hands::createEmptyHands)
                 .toList();
     }
 
-    private static void validate(final List<String> names) {
-        validateSize(names);
-        validateDuplication(names);
-    }
+    public void dealerDeal() {
+        DealerHands dealerHands = getDealerHands();
 
-    private static void validateSize(final List<String> names) {
-        if (names.size() < MIN_SIZE || MAX_SIZE < names.size()) {
-            throw new IllegalArgumentException("[ERROR] 유효하지 않은 참여자 수입니다.");
+        while (dealerHands.sum() <= 16) {
+            dealerHands.add(cardDeck.pop());
         }
     }
 
-    private static void validateDuplication(final List<String> names) {
-        if (names.size() != Set.copyOf(names).size()) {
-            throw new IllegalArgumentException("[ERROR] 참여자 이름은 중복될 수 없습니다.");
-        }
+
+    public int countAddedHands() {
+        return getDealerHands().countAddedHands();
+    }
+
+    public String getDealerName() {
+        return getDealerHands().getName();
     }
 }

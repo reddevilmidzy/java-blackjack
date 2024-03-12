@@ -29,4 +29,8 @@ public class Name {
             throw new IllegalArgumentException("[ERROR] 참여자 이름에 공백을 입력할 수 없습니다.");
         }
     }
+
+    public boolean isDealer() {
+        return "딜러".equals(value);
+    }
 }

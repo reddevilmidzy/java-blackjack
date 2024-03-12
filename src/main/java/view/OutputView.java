@@ -1,10 +1,10 @@
 package view;
 
-import static domain.participant.Dealer.INIT_HANDS_SIZE;
-import static domain.participant.Dealer.THRESHOLD;
+import static domain.participant.DealerHands.INIT_HANDS_SIZE;
+import static domain.participant.DealerHands.THRESHOLD;
 
 import domain.Result;
-import domain.participant.Player;
+import domain.participant.Hands;
 import dto.DealerHandsDto;
 import dto.ParticipantDto;
 import dto.ParticipantsDto;
@@ -46,10 +46,10 @@ public class OutputView {
         System.out.print(LINE);
     }
 
-    public void printGameResult(final Map<Result, Integer> dealerResult, final Map<Player, Result> playerResult) {
+    public void printGameResult(final Map<Result, Integer> dealerResult, final Map<Hands, Result> playerResult) {
         System.out.println("## 최종결과");
         System.out.printf(RESULT_FORM, "딜러", format(dealerResult));
-        for (Map.Entry<Player, Result> entry : playerResult.entrySet()) {
+        for (Map.Entry<Hands, Result> entry : playerResult.entrySet()) {
             System.out.printf(RESULT_FORM, entry.getKey().getName(), entry.getValue().getValue());
         }
     }

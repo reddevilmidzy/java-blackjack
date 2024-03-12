@@ -11,14 +11,21 @@ public class Hands {
     private static final int BLACK_JACK = 21;
     private static final int EXTRA_ACE_VALUE = 10;
 
+    private final Name name;
     private final List<Card> cards;
 
-    public Hands(final List<Card> cards) {
-        this.cards = new ArrayList<>(cards);
+    public Hands(Name name, List<Card> cards) {
+        this.name = name;
+        this.cards = cards;
     }
 
-    public static Hands createEmptyHands() {
-        return new Hands(new ArrayList<>());
+    public Hands(String name) {
+        this.name = new Name(name);
+        this.cards = new ArrayList<>();
+    }
+
+    public static Hands createEmptyHands(final String name) {
+        return new Hands(new Name(name), new ArrayList<>());
     }
 
     public int sum() {
@@ -47,9 +54,6 @@ public class Hands {
 
     public List<Card> getCards() {
         return cards;
-//        return cards.stream()
-//                .map(Card::toString)
-//                .toList();
     }
 
     public Result calculateResultBy(final Hands target) {
@@ -85,5 +89,13 @@ public class Hands {
     @Override
     public int hashCode() {
         return Objects.hash(cards);
+    }
+
+    public boolean isDealer() {
+        return name.isDealer();
+    }
+
+    public String getName() {
+        return name.getValue();
     }
 }
